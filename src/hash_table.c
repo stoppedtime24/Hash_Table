@@ -7,6 +7,8 @@
 const int HT_PRIME_1 = 151;
 const int HT_PRIME_2 = 157;
 
+static ht_pair HT_DELETED_ITEM = {NULL, NULL};
+
 static ht_pair* ht_new_pair(const char* k, const char* v) {
 	ht_pair* i = malloc(sizeof(ht_pair));
 	i->key = strdup(k);
@@ -63,10 +65,52 @@ void ht_insert(ht_hash_table *ht, const char *key, const char *value) {
 	ht_pair* cur_pair = ht->pairs[index];
 	int i = 1;
 	while (cur_pair != NULL) {
+		if (cur_pair != &HT_DELETED_ITEM) {
+			if (strcmp(cur_pair->key, key) == 0) {
+				ht_del_pair(cur_pair);
+				ht->pairs[index] = pair;
+				return;
+			}
+		}
 		index = ht_get_hash(pair->key, ht->size, i);
 		cur_pair = ht->pairs[index];
 		i++;
 	}
 	ht->pairs[index] = pair;
 	ht->count++;
+}
+
+char* ht_search(ht_hash_table* ht, const char* key) {
+	int index = ht_get_hash(key, ht->size, 0);
+	ht_pair* pair = ht->pairs[index];
+	int i = 1;
+	while (pair != NULL) {
+		if (pair != &HT_DELETED_ITEM) {
+			if (strcmp(pair->key, key) == 0) {
+				return pair->value;
+			}
+		}
+		index = ht_get_hash(key, ht->size, i);
+		pair = ht->pairs[index];
+		i++;
+	}
+	return NULL;
+}
+
+void ht_delete(ht_hash_table* ht, const char* key) {
+	int index = ht_get_hash(key, ht->size, 0);
+	ht_pair* pair = ht->pairs[index];
+	int i = 1;
+	while (pair != NULL) {
+		if (pair != &HT_DELETED_ITEM) {
+			if (strcmp(pair->key, key) == 0) {
+				ht_del_pair(pair);
+				ht->pairs[index] = &HT_DELETED_ITEM;
+			}
+		}
+		index = ht_get_hash(key, ht->size, i);
+		pair = ht->pairs[index];
+		i++;
+	}
+	ht->count--;
 }
